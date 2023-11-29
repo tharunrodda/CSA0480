@@ -1,0 +1,180 @@
+.#include <stdio.h>
+#include <stdlib.h>
+
+// Structure to represent an employee
+struct Employee {
+    int id;
+    char name[50];
+    float salary;
+};
+
+// Function prototypes
+void addEmployee(FILE *file);
+void displayAllEmployees(FILE *file);
+void updateEmployee(FILE *file);
+void deleteEmployee(FILE *file);
+
+int main() {
+    FILE *employeeFile;
+    int choice;
+
+    // Open the file in binary mode for random access
+    employeeFile = fopen("employee.dat", "rb+");
+
+    if (employeeFile == NULL) {
+        // If the file does not exist, create it
+        employeeFile = fopen("employee.dat", "wb+");
+    }
+
+    if (employeeFile == NULL) {
+        printf("Error opening file.\n");
+        return 1;
+    }
+
+    do {
+        // Display menu
+        printf("\nEmployee Database\n");
+        printf("1. Add Employee\n");
+        printf("2. Display All Employees\n");
+        printf("3. Update Employee\n");
+        printf("4. Delete Employee\n");
+        printf("0. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        // Perform the chosen operation
+        switch (choice) {
+            case 1:
+                addEmployee(employeeFile);
+                break;
+            case 2:
+                displayAllEmployees(employeeFile);
+                break;
+            case 3:
+                updateEmployee(employeeFile);
+                break;
+            case 4:
+                deleteEmployee(employeeFile);
+                break;
+            case 0:
+                printf("Exiting the program.\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+
+    } while (choice != 0);
+
+    // Close the file before exiting
+    fclose(employeeFile);
+
+    return 0;
+}
+
+void addEmployee(FILE *file) {
+    struct Employee employee;
+
+    // Move the file pointer to the end of the file
+    fseek(file, 0, SEEK_END);
+
+    // Get employee details from the user
+    printf("Enter employee ID: ");
+    scanf("%d", &employee.id);
+
+    printf("Enter employee name: ");
+    scanf("%s", employee.name);
+
+    printf("Enter employee salary: ");
+    scanf("%f", &employee.salary);
+
+    // Write the employee details to the file
+    fwrite(&employee, sizeof(struct Employee), 1, file);
+
+    printf("Employee added successfully.\n");
+}
+
+void displayAllEmployees(FILE *file) {
+    struct Employee employee;
+
+    // Move the file pointer to the beginning of the file
+    fseek(file, 0, SEEK_SET);
+
+    // Read and display all employee records
+    while (fread(&employee, sizeof(struct Employee), 1, file) == 1) {
+        printf("ID: %d, Name: %s, Salary: %.2f\n", employee.id, employee.name, employee.salary);
+    }
+}
+
+void updateEmployee(FILE *file) {
+    struct Employee employee;
+    int targetID;
+
+    // Get the employee ID to update
+    printf("Enter the ID of the employee to update: ");
+    scanf("%d", &targetID);
+
+    // Search for the employee with the specified ID
+    while (fread(&employee, sizeof(struct Employee), 1, file) == 1) {
+        if (employee.id == targetID) {
+            // Move the file pointer back by the size of one record
+            fseek(file, -sizeof(struct Employee), SEEK_CUR);
+
+            // Get updated employee details
+            printf("Enter new name: ");
+            scanf("%s", employee.name);
+
+            printf("Enter new salary: ");
+            scanf("%f", &employee.salary);
+
+            // Write the updated details to the file
+            fwrite(&employee, sizeof(struct Employee), 1, file);
+
+            printf("Employee updated successfully.\n");
+            return;
+        }
+    }
+
+    printf("Employee with ID %d not found.\n", targetID);
+}
+
+void deleteEmployee(FILE *file) {
+    struct Employee employee, temp;
+    int targetID;
+
+    // Get the employee ID to delete
+    printf("Enter the ID of the employee to delete: ");
+    scanf("%d", &targetID);
+
+    // Create a temporary file
+    FILE *tempFile = fopen("temp.dat", "wb");
+
+    // Search for the employee with the specified ID
+    while (fread(&employee, sizeof(struct Employee), 1, file) == 1) {
+        if (employee.id == targetID) {
+            // Skip writing this record to the temporary file
+            continue;
+        }
+
+        // Write the non-deleted records to the temporary file
+        fwrite(&employee, sizeof(struct Employee), 1, tempFile);
+    }
+
+    // Close both files
+    fclose(file);
+    fclose(tempFile);
+
+    // Remove the original file
+    remove("employee.dat");
+
+    // Rename the temporary file to the original file
+    rename("temp.dat", "employee.dat");
+
+    // Reopen the file in binary mode for random access
+    file = fopen("employee.dat", "rb+");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        exit(1);
+    }
+
+    printf("Employee with ID %d deleted successfully.\n", targetID);
+}
