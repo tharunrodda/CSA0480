@@ -1,0 +1,95 @@
+23.#include <stdio.h>
+
+#define MEMORY_SIZE 1000
+
+// Structure to represent a memory block
+struct MemoryBlock {
+    int start;
+    int size;
+    int processId;
+};
+
+// Function prototypes
+void initializeMemory(struct MemoryBlock memory[], int size);
+void displayMemory(struct MemoryBlock memory[], int size);
+void allocateMemory(struct MemoryBlock memory[], int size, int processId, int requestSize);
+void deallocateMemory(struct MemoryBlock memory[], int size, int processId);
+
+int main() {
+    // Number of memory blocks
+    int numBlocks;
+    printf("Enter the number of memory blocks: ");
+    scanf("%d", &numBlocks);
+
+    // Initialize an array of memory blocks
+    struct MemoryBlock memory[MEMORY_SIZE];
+    initializeMemory(memory, numBlocks);
+
+    // Display the initial state of memory
+    displayMemory(memory, numBlocks);
+
+    // Allocate and deallocate memory
+    allocateMemory(memory, numBlocks, 1, 200);
+    displayMemory(memory, numBlocks);
+
+    allocateMemory(memory, numBlocks, 2, 100);
+    displayMemory(memory, numBlocks);
+
+    deallocateMemory(memory, numBlocks, 1);
+    displayMemory(memory, numBlocks);
+
+    allocateMemory(memory, numBlocks, 3, 150);
+    displayMemory(memory, numBlocks);
+
+    return 0;
+}
+
+void initializeMemory(struct MemoryBlock memory[], int size) {
+    // Initialize memory blocks with random sizes
+    for (int i = 0; i < size; ++i) {
+        memory[i].start = i * 100;
+        memory[i].size = rand() % 200 + 50; // Random size between 50 and 250
+        memory[i].processId = -1; // -1 indicates the block is free
+    }
+}
+
+void displayMemory(struct MemoryBlock memory[], int size) {
+    printf("\nMemory State:\n");
+    printf("-----------------------------------------------------\n");
+    printf("| Block |   Start   |   Size   | Process ID | Status |\n");
+    printf("-----------------------------------------------------\n");
+
+    for (int i = 0; i < size; ++i) {
+        printf("|   %2d   |   %4d   |   %4d   |     %3d     |", i + 1, memory[i].start, memory[i].size, memory[i].processId);
+
+        if (memory[i].processId == -1) {
+            printf("   Free   |\n");
+        } else {
+            printf(" Allocated |\n");
+        }
+    }
+
+    printf("-----------------------------------------------------\n");
+}
+
+void allocateMemory(struct MemoryBlock memory[], int size, int processId, int requestSize) {
+    // Find the first block that is large enough for the process
+    for (int i = 0; i < size; ++i) {
+        if (memory[i].processId == -1 && memory[i].size >= requestSize) {
+            memory[i].processId = processId;
+            printf("Process %d allocated to Block %d\n", processId, i + 1);
+            break;
+        }
+    }
+}
+
+void deallocateMemory(struct MemoryBlock memory[], int size, int processId) {
+    // Find the block allocated to the specified process and deallocate it
+    for (int i = 0; i < size; ++i) {
+        if (memory[i].processId == processId) {
+            memory[i].processId = -1;
+            printf("Process %d deallocated from Block %d\n", processId, i + 1);
+            break;
+        }
+    }
+}
