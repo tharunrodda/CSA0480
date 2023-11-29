@@ -1,0 +1,77 @@
+#include <stdio.h>
+
+#define MAX_PROCESS 10
+
+typedef struct {
+    int process_id;
+    int arrival_time;
+    int burst_time;
+    int priority;
+    int remaining_time;
+    int waiting_time;
+    int turnaround_time;
+    int executed;
+} Process;
+
+void calculateWaitingTime(Process processes[], int n) {
+    int currentTime = 0, complete = 0, minPriorityIndex;
+    int minPriority = __INT_MAX__;
+    int executedProcess = -1;
+
+    while (complete != n) {
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= currentTime && processes[i].priority < minPriority && processes[i].remaining_time > 0) {
+                minPriority = processes[i].priority;
+                minPriorityIndex = i;
+            }
+        }
+
+        if (executedProcess != minPriorityIndex) {
+            processes[minPriorityIndex].remaining_time--;
+            currentTime++;
+            minPriority = __INT_MAX__;
+            executedProcess = minPriorityIndex;
+        } else {
+            currentTime++;
+        }
+
+        if (processes[minPriorityIndex].remaining_time == 0) {
+            complete++;
+            int completionTime = currentTime;
+            processes[minPriorityIndex].turnaround_time = completionTime - processes[minPriorityIndex].arrival_time;
+            processes[minPriorityIndex].waiting_time = processes[minPriorityIndex].turnaround_time - processes[minPriorityIndex].burst_time;
+            processes[minPriorityIndex].executed = 1;
+        }
+    }
+}
+
+void displayProcesses(Process processes[], int n) {
+    printf("Process ID\tArrival Time\tBurst Time\tPriority\tWaiting Time\tTurnaround Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n",
+               processes[i].process_id, processes[i].arrival_time, processes[i].burst_time,
+               processes[i].priority, processes[i].waiting_time, processes[i].turnaround_time);
+    }
+}
+
+int main() {
+    Process processes[MAX_PROCESS];
+    int n;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    printf("Enter process details (arrival time, burst time, priority) for each process:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Process %d: ", i + 1);
+        processes[i].process_id = i + 1;
+        scanf("%d %d %d", &processes[i].arrival_time, &processes[i].burst_time, &processes[i].priority);
+        processes[i].remaining_time = processes[i].burst_time;
+        processes[i].executed = 0;
+    }
+
+    calculateWaitingTime(processes, n);
+    displayProcesses(processes, n);
+
+    return 0;
+}
