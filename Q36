@@ -1,0 +1,62 @@
+36.#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_BLOCKS 10
+#define BLOCK_SIZE 256
+
+// Define a block structure for simulation
+struct Block {
+    char data[BLOCK_SIZE];
+    struct Block* next;
+};
+
+// Function prototypes
+void initializeFile(struct Block* file[], int size);
+void readRecord(struct Block* file[], int recordNumber);
+
+int main() {
+    struct Block* file[MAX_BLOCKS]; // Array to represent file blocks
+
+    // Initialize the file
+    initializeFile(file, MAX_BLOCKS);
+
+    // Simulate reading records sequentially using the linked list
+    for (int i = 0; i < MAX_BLOCKS; ++i) {
+        printf("Reading Record %d:\n", i + 1);
+        readRecord(file, i);
+    }
+
+    return 0;
+}
+
+void initializeFile(struct Block* file[], int size) {
+    for (int i = 0; i < size; ++i) {
+        // Allocate memory for each block and set next pointer to NULL
+        file[i] = (struct Block*)malloc(sizeof(struct Block));
+        file[i]->next = NULL;
+
+        // Simulate filling each block with some data
+        sprintf(file[i]->data, "This is block %d.", i + 1);
+
+        // If it's not the last block, set the next pointer to the next block
+        if (i < size - 1) {
+            file[i]->next = (struct Block*)malloc(sizeof(struct Block));
+        }
+    }
+}
+
+void readRecord(struct Block* file[], int recordNumber) {
+    struct Block* currentBlock = file[recordNumber];
+
+    // Check if the block index is valid
+    if (currentBlock == NULL) {
+        printf("Invalid block index.\n");
+        return;
+    }
+
+    // Read and print data from the specified block
+    printf("%s\n", currentBlock->data);
+
+    // Move to the next block in the linked list
+    currentBlock = currentBlock->next;
+}
