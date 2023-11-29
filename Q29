@@ -1,0 +1,109 @@
+29.#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+#define BUFFER_SIZE 5
+#define NUM_PRODUCERS 2
+#define NUM_CONSUMERS 2
+
+// Shared buffer
+int buffer[BUFFER_SIZE];
+int in = 0, out = 0;
+
+// Semaphores
+sem_t empty, full, mutex;
+
+// Function prototypes
+void *producer(void *arg);
+void *consumer(void *arg);
+
+int main() {
+    // Initialize semaphores
+    sem_init(&empty, 0, BUFFER_SIZE);
+    sem_init(&full, 0, 0);
+    sem_init(&mutex, 0, 1);
+
+    // Create threads for producers and consumers
+    pthread_t producerThreads[NUM_PRODUCERS];
+    pthread_t consumerThreads[NUM_CONSUMERS];
+
+    for (int i = 0; i < NUM_PRODUCERS; ++i) {
+        pthread_create(&producerThreads[i], NULL, producer, NULL);
+    }
+
+    for (int i = 0; i < NUM_CONSUMERS; ++i) {
+        pthread_create(&consumerThreads[i], NULL, consumer, NULL);
+    }
+
+    // Join threads
+    for (int i = 0; i < NUM_PRODUCERS; ++i) {
+        pthread_join(producerThreads[i], NULL);
+    }
+
+    for (int i = 0; i < NUM_CONSUMERS; ++i) {
+        pthread_join(consumerThreads[i], NULL);
+    }
+
+    // Destroy semaphores
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    sem_destroy(&mutex);
+
+    return 0;
+}
+
+void *producer(void *arg) {
+    int item = 1;
+
+    while (1) {
+        // Produce item
+        sleep(1);
+
+        // Wait for empty buffer slot
+        sem_wait(&empty);
+        // Wait for mutex
+        sem_wait(&mutex);
+
+        // Produce item in the buffer
+        buffer[in] = item;
+        printf("Produced item %d at position %d\n", item, in);
+        in = (in + 1) % BUFFER_SIZE;
+
+        // Signal mutex
+        sem_post(&mutex);
+        // Signal full buffer slot
+        sem_post(&full);
+
+        item++;
+    }
+
+    pthread_exit(NULL);
+}
+
+void *consumer(void *arg) {
+    int item;
+
+    while (1) {
+        // Wait for full buffer slot
+        sem_wait(&full);
+        // Wait for mutex
+        sem_wait(&mutex);
+
+        // Consume item from the buffer
+        item = buffer[out];
+        printf("Consumed item %d from position %d\n", item, out);
+        out = (out + 1) % BUFFER_SIZE;
+
+        // Signal mutex
+        sem_post(&mutex);
+        // Signal empty buffer slot
+        sem_post(&empty);
+
+        // Consume item
+        sleep(2);
+    }
+
+    pthread_exit(NULL);
+}
