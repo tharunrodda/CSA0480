@@ -1,0 +1,74 @@
+38.#include <stdio.h>
+#include <stdlib.h>
+
+// Function prototypes
+void scanDisk(int requestSequence[], int sequenceSize, int initialPosition);
+
+int main() {
+    int requestSequence[] = {98, 183, 37, 122, 14, 124, 65, 67};
+    int sequenceSize = sizeof(requestSequence) / sizeof(requestSequence[0]);
+    int initialPosition = 53;
+
+    // Simulate SCAN disk scheduling
+    scanDisk(requestSequence, sequenceSize, initialPosition);
+
+    return 0;
+}
+
+void scanDisk(int requestSequence[], int sequenceSize, int initialPosition) {
+    int totalSeekTime = 0;
+    int currentPosition = initialPosition;
+
+    printf("Disk Head Movement: ");
+
+    // Sort the request sequence
+    for (int i = 0; i < sequenceSize - 1; ++i) {
+        for (int j = 0; j < sequenceSize - i - 1; ++j) {
+            if (requestSequence[j] > requestSequence[j + 1]) {
+                // Swap elements if they are in the wrong order
+                int temp = requestSequence[j];
+                requestSequence[j] = requestSequence[j + 1];
+                requestSequence[j + 1] = temp;
+            }
+        }
+    }
+
+    // Find the index where the initial position falls in the sorted sequence
+    int initialIndex = 0;
+    while (initialIndex < sequenceSize && requestSequence[initialIndex] < initialPosition) {
+        initialIndex++;
+    }
+
+    // Simulate moving towards the higher end
+    for (int i = initialIndex; i < sequenceSize; ++i) {
+        int seekDistance = abs(currentPosition - requestSequence[i]);
+        totalSeekTime += seekDistance;
+
+        // Update current position to the serviced request
+        currentPosition = requestSequence[i];
+
+        // Print the details of the seek operation
+        printf("%d -> ", requestSequence[i]);
+    }
+
+    // Move to the highest track
+    totalSeekTime += abs(currentPosition - 199);
+    currentPosition = 199;
+    printf("199 -> ");
+
+    // Simulate moving towards the lower end
+    for (int i = initialIndex - 1; i >= 0; --i) {
+        int seekDistance = abs(currentPosition - requestSequence[i]);
+        totalSeekTime += seekDistance;
+
+        // Update current position to the serviced request
+        currentPosition = requestSequence[i];
+
+        // Print the details of the seek operation
+        printf("%d -> ", requestSequence[i]);
+    }
+
+    printf("End\n");
+
+    printf("Total Seek Time: %d\n", totalSeekTime);
+}
