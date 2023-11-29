@@ -1,0 +1,95 @@
+18.#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+#define BUFFER_SIZE 5
+
+// Buffer to store items
+int buffer[BUFFER_SIZE];
+int in = 0, out = 0;
+
+// Semaphore declarations
+sem_t empty, full, mutex;
+
+// Function prototypes
+void *producer(void *arg);
+void *consumer(void *arg);
+
+int main() {
+    // Initialize semaphores
+    sem_init(&empty, 0, BUFFER_SIZE);
+    sem_init(&full, 0, 0);
+    sem_init(&mutex, 0, 1);
+
+    // Create threads for producer and consumer
+    pthread_t producerThread, consumerThread;
+
+    pthread_create(&producerThread, NULL, producer, NULL);
+    pthread_create(&consumerThread, NULL, consumer, NULL);
+
+    // Join threads
+    pthread_join(producerThread, NULL);
+    pthread_join(consumerThread, NULL);
+
+    // Destroy semaphores
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    sem_destroy(&mutex);
+
+    return 0;
+}
+
+void *producer(void *arg) {
+    int item = 1;
+
+    while (1) {
+        // Produce item
+        sleep(1);
+
+        // Wait for empty buffer slot
+        sem_wait(&empty);
+        // Wait for mutex
+        sem_wait(&mutex);
+
+        // Produce item in the buffer
+        buffer[in] = item;
+        printf("Produced item %d at position %d\n", item, in);
+        in = (in + 1) % BUFFER_SIZE;
+
+        // Signal mutex
+        sem_post(&mutex);
+        // Signal full buffer slot
+        sem_post(&full);
+
+        item++;
+    }
+
+    pthread_exit(NULL);
+}
+
+void *consumer(void *arg) {
+    int item;
+
+    while (1) {
+        // Wait for full buffer slot
+        sem_wait(&full);
+        // Wait for mutex
+        sem_wait(&mutex);
+
+        // Consume item from the buffer
+        item = buffer[out];
+        printf("Consumed item %d from position %d\n", item, out);
+        out = (out + 1) % BUFFER_SIZE;
+
+        // Signal mutex
+        sem_post(&mutex);
+        // Signal empty buffer slot
+        sem_post(&empty);
+
+        // Consume item
+        sleep(2);
+    }
+
+    pthread_exit(NULL);
+}
