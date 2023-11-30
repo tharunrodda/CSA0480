@@ -1,0 +1,33 @@
+40.Owner (User):
+
+The user who owns the file.
+The owner has the most control over the file.
+Permissions are specified for the owner using the characters r (read), w (write), and x (execute).
+Example: -rwx------ (read, write, and execute permission for the owner, no permission for others).
+Group:
+
+A group of users associated with the file.
+Permissions are specified for the group using the characters r, w, and x.
+Example: ----rwx--- (read, write, and execute permission for the group, no permission for others).
+Others:
+
+All other users on the system who are neither the owner nor in the group.
+Permissions are specified for others using the characters r, w, and x.
+Example: -------r-x (read and execute permission for others, no permission for others).
+File Access Permissions:
+The permission characters are represented in a 10-character string, where the first character represents the file type, and the next three sets of three characters represent permissions for the owner, group, and others.
+
+File Type:
+
+-: Regular file
+d: Directory
+l: Symbolic link
+c: Character device file
+b: Block device file
+p: Named pipe
+s: Socket
+Permission Characters:
+
+r: Read permission
+w: Write permission
+x: Execute permission
